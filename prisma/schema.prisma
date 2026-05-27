@@ -1,0 +1,374 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BusinessStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+enum BusinessRole {
+  OWNER
+  ADMIN
+  STAFF
+  VIEWER
+}
+
+enum ProductCondition {
+  NEW
+  USED
+  REFURBISHED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+  DRAFT
+}
+
+enum ImportSourceType {
+  PASTED_TEXT
+  IMAGE
+  PDF
+  SPREADSHEET
+  INSTAGRAM
+  WHATSAPP_EXPORT
+}
+
+enum ImportStatus {
+  PROCESSING
+  NEEDS_REVIEW
+  COMPLETED
+  FAILED
+}
+
+enum ImportItemStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum LeadSource {
+  STORE_SEARCH
+  PRODUCT_PAGE
+  WHATSAPP_CLICK
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  SOLD
+  LOST
+}
+
+enum InventoryEventType {
+  SALE
+  MANUAL_ADJUSTMENT
+  RESTOCK
+  RETURN
+}
+
+enum InventoryEventSource {
+  MANUAL
+  ASSISTANT
+  IMPORT
+}
+
+enum AssistantActionStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CANCELLED
+  FAILED
+}
+
+enum InsightType {
+  DEMAND_GAP
+  STOCK_ALERT
+  CONVERSION_ALERT
+  PRODUCT_OPPORTUNITY
+  SEARCH_NO_RESULT
+}
+
+enum InsightImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InsightStatus {
+  NEW
+  VIEWED
+  DISMISSED
+  RESOLVED
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  businesses Business[]       @relation("BusinessOwner")
+  memberships BusinessMember[]
+  actions     AssistantAction[]
+
+  @@map("users")
+}
+
+model Business {
+  id              String         @id @default(uuid()) @db.Uuid
+  ownerUserId     String         @map("owner_user_id") @db.Uuid
+  name            String
+  slug            String         @unique
+  description     String?
+  logoUrl         String?        @map("logo_url")
+  whatsappNumber  String?        @map("whatsapp_number")
+  instagramHandle String?        @map("instagram_handle")
+  publicUrl       String?        @map("public_url")
+  status          BusinessStatus @default(DRAFT)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  owner           User                 @relation("BusinessOwner", fields: [ownerUserId], references: [id])
+  members         BusinessMember[]
+  products        Product[]
+  importBatches   ProductImportBatch[]
+  importItems     ProductImportItem[]
+  searchSessions  SearchSession[]
+  searchResults   SearchResult[]
+  leads           Lead[]
+  inventoryEvents InventoryEvent[]
+  actions         AssistantAction[]
+  insights        Insight[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([ownerUserId])
+  @@map("businesses")
+}
+
+model BusinessMember {
+  id         String       @id @default(uuid()) @db.Uuid
+  businessId String       @map("business_id") @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  role       BusinessRole @default(OWNER)
+  scopes     String[]     @default([])
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([businessId, userId])
+  @@index([userId])
+  @@map("business_members")
+}
+
+model Product {
+  id            String           @id @default(uuid()) @db.Uuid
+  businessId    String           @map("business_id") @db.Uuid
+  title         String
+  slug          String?
+  description   String?
+  price         Decimal?         @db.Decimal(12, 2)
+  currency      String           @default("BRL")
+  stockQuantity Int              @default(0) @map("stock_quantity")
+  condition     ProductCondition @default(NEW)
+  status        ProductStatus    @default(DRAFT)
+  brand         String?
+  category      String?
+  mainImageUrl  String?          @map("main_image_url")
+  images        Json?
+  attributes    Json?
+  searchText    String?          @map("search_text")
+  embedding     Json?
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  business        Business         @relation(fields: [businessId], references: [id])
+  searchResults   SearchResult[]
+  leads           Lead[]
+  inventoryEvents InventoryEvent[]
+
+  @@index([businessId, status])
+  @@index([businessId, slug])
+  @@map("products")
+}
+
+model ProductImportBatch {
+  id            String           @id @default(uuid()) @db.Uuid
+  businessId    String           @map("business_id") @db.Uuid
+  sourceType    ImportSourceType @map("source_type")
+  sourcePayload Json?            @map("source_payload")
+  status        ImportStatus     @default(PROCESSING)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  business Business            @relation(fields: [businessId], references: [id])
+  items    ProductImportItem[]
+
+  @@index([businessId, status])
+  @@map("product_import_batches")
+}
+
+model ProductImportItem {
+  id                    String           @id @default(uuid()) @db.Uuid
+  batchId               String           @map("batch_id") @db.Uuid
+  businessId            String           @map("business_id") @db.Uuid
+  rawContent            String?          @map("raw_content")
+  detectedTitle         String?          @map("detected_title")
+  detectedDescription   String?          @map("detected_description")
+  detectedPrice         Decimal?         @map("detected_price") @db.Decimal(12, 2)
+  detectedStockQuantity Int?             @map("detected_stock_quantity")
+  detectedAttributes    Json?            @map("detected_attributes")
+  confidenceScore       Decimal?         @map("confidence_score") @db.Decimal(5, 2)
+  status                ImportItemStatus @default(PENDING_REVIEW)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  batch    ProductImportBatch @relation(fields: [batchId], references: [id])
+  business Business           @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, status])
+  @@map("product_import_items")
+}
+
+model SearchSession {
+  id               String   @id @default(uuid()) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  visitorId        String?  @map("visitor_id")
+  sessionId        String?  @map("session_id")
+  originalQuery    String   @map("original_query")
+  interpretedQuery Json?    @map("interpreted_query")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  business Business       @relation(fields: [businessId], references: [id])
+  results  SearchResult[]
+  leads    Lead[]
+
+  @@index([businessId, createdAt])
+  @@map("search_sessions")
+}
+
+model SearchResult {
+  id              String   @id @default(uuid()) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  searchSessionId String   @map("search_session_id") @db.Uuid
+  productId       String   @map("product_id") @db.Uuid
+  rank            Int
+  score           Decimal? @db.Decimal(6, 3)
+  matchReasons    Json?    @map("match_reasons")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  business      Business      @relation(fields: [businessId], references: [id])
+  searchSession SearchSession @relation(fields: [searchSessionId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@index([businessId, searchSessionId])
+  @@map("search_results")
+}
+
+model Lead {
+  id               String     @id @default(uuid()) @db.Uuid
+  businessId       String     @map("business_id") @db.Uuid
+  searchSessionId  String?    @map("search_session_id") @db.Uuid
+  productId        String?    @map("product_id") @db.Uuid
+  originalQuery    String?    @map("original_query")
+  interpretedQuery Json?      @map("interpreted_query")
+  leadSource       LeadSource @default(STORE_SEARCH) @map("lead_source")
+  status           LeadStatus @default(NEW)
+  whatsappClicked  Boolean    @default(false) @map("whatsapp_clicked")
+  converted        Boolean    @default(false)
+  convertedAt      DateTime?  @map("converted_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  business        Business         @relation(fields: [businessId], references: [id])
+  searchSession   SearchSession?   @relation(fields: [searchSessionId], references: [id])
+  product         Product?         @relation(fields: [productId], references: [id])
+  inventoryEvents InventoryEvent[]
+
+  @@index([businessId, status, createdAt])
+  @@map("leads")
+}
+
+model InventoryEvent {
+  id             String               @id @default(uuid()) @db.Uuid
+  businessId     String               @map("business_id") @db.Uuid
+  productId      String               @map("product_id") @db.Uuid
+  leadId         String?              @map("lead_id") @db.Uuid
+  eventType      InventoryEventType   @map("event_type")
+  quantityDelta  Int                  @map("quantity_delta")
+  previousStock  Int                  @map("previous_stock")
+  newStock       Int                  @map("new_stock")
+  source         InventoryEventSource @default(MANUAL)
+  notes          String?
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+  lead     Lead?    @relation(fields: [leadId], references: [id])
+
+  @@index([businessId, productId, createdAt])
+  @@map("inventory_events")
+}
+
+model AssistantAction {
+  id                String                @id @default(uuid()) @db.Uuid
+  businessId        String                @map("business_id") @db.Uuid
+  userId            String?               @map("user_id") @db.Uuid
+  rawCommand        String                @map("raw_command")
+  interpretedAction Json?                 @map("interpreted_action")
+  status            AssistantActionStatus @default(PENDING_CONFIRMATION)
+  result            Json?
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([businessId, status, createdAt])
+  @@map("assistant_actions")
+}
+
+model Insight {
+  id              String        @id @default(uuid()) @db.Uuid
+  businessId      String        @map("business_id") @db.Uuid
+  type            InsightType
+  title           String
+  description     String
+  impactLevel     InsightImpact @default(MEDIUM) @map("impact_level")
+  suggestedAction String?       @map("suggested_action")
+  status          InsightStatus @default(NEW)
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, status, impactLevel])
+  @@map("insights")
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @map("business_id") @db.Uuid
+  eventName  String   @map("event_name")
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, eventName, createdAt])
+  @@map("analytics_events")
+}
