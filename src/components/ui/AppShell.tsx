@@ -8,6 +8,7 @@ import {
   MessageSquareText,
   Settings,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const nav = [
   { path: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -58,6 +59,7 @@ export function AppShell({
               <Link className="button secondary" href={storeSlug ? `/${storeSlug}` : "/app/businesses"}>
                 Ver loja pública
               </Link>
+              <ThemeToggle />
             </div>
           </div>
         </div>

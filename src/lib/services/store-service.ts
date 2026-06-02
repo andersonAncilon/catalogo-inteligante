@@ -3,6 +3,7 @@ import {
   findBusinessBySlug,
   findProductBySlug,
   listPublicProducts,
+  recordAnalyticsEvent,
 } from "@/lib/repositories/catalog-repository";
 
 export async function getPublicStore(slug: string) {
@@ -12,6 +13,7 @@ export async function getPublicStore(slug: string) {
   }
 
   const products = await listPublicProducts(business.id);
+  await recordAnalyticsEvent(business.id, "store_viewed", "business", business.id);
   return { business, products };
 }
 

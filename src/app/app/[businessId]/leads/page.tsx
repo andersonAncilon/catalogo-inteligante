@@ -1,17 +1,20 @@
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 import { AppShell } from "@/components/ui/AppShell";
+import { LeadActionButtons } from "@/components/forms/LeadActionButtons";
 import { apiGet } from "@/lib/api/server";
-import type { Lead } from "@/types/domain";
+import type { Business, Lead } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeadsPage({ params }: { params: Promise<{ businessId: string }> }) {
   const { businessId } = await params;
-  const leads = await apiGet<Lead[]>(`/api/app/${businessId}/leads`);
+  const [business, leads] = await Promise.all([
+    apiGet<Business>(`/api/app/${businessId}/settings`),
+    apiGet<Lead[]>(`/api/app/${businessId}/leads`),
+  ]);
 
   return (
-    <AppShell businessId={businessId}>
+    <AppShell businessId={businessId} businessName={business.name} storeSlug={business.slug}>
       <div className="page-title">
         <div>
           <h1>Leads</h1>
@@ -44,11 +47,13 @@ export default async function LeadsPage({ params }: { params: Promise<{ business
               <Link className="button secondary" href={`/app/${businessId}/leads/${lead.id}`}>
                 Ver detalhe
               </Link>
-              <button className="button primary">Marcar como vendido</button>
-              <button className="button secondary">
-                <MessageCircle size={18} /> Abrir WhatsApp
-              </button>
             </div>
+            <LeadActionButtons
+              businessId={businessId}
+              leadId={lead.id}
+              whatsappNumber={business.whatsappNumber}
+              message={`Olá, vi seu interesse na busca: ${lead.originalQuery}`}
+            />
           </article>
         ))}
         {leads.length === 0 ? (

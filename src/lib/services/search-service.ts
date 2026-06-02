@@ -1,6 +1,7 @@
 import { badRequest } from "@/lib/backend/errors";
 import { createSearchSession, findBusinessBySlug, listPublicProducts } from "@/lib/repositories/catalog-repository";
-import { interpretSearchQuery } from "@/lib/search/intent";
+import { interpretSearchQueryWithAI } from "@/lib/search/intent";
+import { searchProductsWithOrama } from "@/lib/search/orama";
 import { rankProducts } from "@/lib/search/ranking";
 import { notFound } from "@/lib/backend/errors";
 
@@ -14,9 +15,10 @@ export async function searchStoreCatalog(storeSlug: string, query: string) {
     throw notFound("Loja não encontrada");
   }
 
-  const interpretedQuery = interpretSearchQuery(query);
+  const interpretedQuery = await interpretSearchQueryWithAI(query);
   const products = await listPublicProducts(business.id);
-  const recommendations = rankProducts(products, interpretedQuery);
+  const textScores = await searchProductsWithOrama(products, query);
+  const recommendations = rankProducts(products, interpretedQuery, { textScores });
   const searchSessionId = await createSearchSession({
     businessId: business.id,
     originalQuery: query,

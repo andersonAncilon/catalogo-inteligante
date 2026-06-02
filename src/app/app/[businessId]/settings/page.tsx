@@ -5,8 +5,15 @@ import type { Business } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage({ params }: { params: Promise<{ businessId: string }> }) {
+export default async function SettingsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ businessId: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
+}) {
   const { businessId } = await params;
+  const { onboarding } = await searchParams;
   const business = await apiGet<Business>(`/api/app/${businessId}/settings`);
 
   return (
@@ -17,7 +24,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ busin
           <p>Dados públicos da loja e operação do WhatsApp.</p>
         </div>
       </div>
-      <SettingsForm business={business} />
+      <SettingsForm business={business} showCatalogWalkthrough={onboarding === "1"} />
     </AppShell>
   );
 }

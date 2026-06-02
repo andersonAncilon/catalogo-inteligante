@@ -5,6 +5,14 @@ import { ProductCard } from "@/components/public-store/ProductCard";
 import { RecommendationCard } from "@/components/public-store/RecommendationCard";
 import { searchStoreCatalog } from "@/lib/services/search-service";
 
+const priorityLabels: Record<string, string> = {
+  camera: "Boa câmera",
+  battery: "Bateria forte",
+  performance: "Desempenho",
+  storage: "Armazenamento",
+  price: "Custo-benefício",
+};
+
 export default async function SearchResultsPage({
   params,
   searchParams,
@@ -34,11 +42,19 @@ export default async function SearchResultsPage({
               <span className="badge green">Até {result.interpretedQuery.maxPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}</span>
             ) : null}
             {result.interpretedQuery.priorities.map((priority) => (
-              <span className="badge green" key={priority}>{priority}</span>
+              <span className="badge green" key={priority}>{priorityLabels[priority] ?? priority}</span>
             ))}
           </div>
         </div>
-        {best ? <RecommendationCard recommendation={best} storeSlug={storeSlug} /> : null}
+        {best ? (
+          <RecommendationCard
+            recommendation={best}
+            storeSlug={storeSlug}
+            whatsappNumber={result.business.whatsappNumber}
+            originalQuery={result.originalQuery}
+            searchSessionId={result.searchSessionId}
+          />
+        ) : null}
         <section className="section">
           <div className="section-header">
             <div>

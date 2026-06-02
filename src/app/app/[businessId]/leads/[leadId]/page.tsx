@@ -1,8 +1,8 @@
-import { MessageCircle } from "lucide-react";
 import { AppShell } from "@/components/ui/AppShell";
+import { LeadActionButtons } from "@/components/forms/LeadActionButtons";
 import { LeadStatusForm } from "@/components/forms/LeadStatusForm";
 import { apiGet } from "@/lib/api/server";
-import type { Lead } from "@/types/domain";
+import type { Business, Lead } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +12,13 @@ export default async function LeadDetailPage({
   params: Promise<{ businessId: string; leadId: string }>;
 }) {
   const { businessId, leadId } = await params;
-  const lead = await apiGet<Lead>(`/api/app/${businessId}/leads/${leadId}`);
+  const [business, lead] = await Promise.all([
+    apiGet<Business>(`/api/app/${businessId}/settings`),
+    apiGet<Lead>(`/api/app/${businessId}/leads/${leadId}`),
+  ]);
 
   return (
-    <AppShell businessId={businessId}>
+    <AppShell businessId={businessId} businessName={business.name} storeSlug={business.slug}>
       <div className="page-title">
         <div>
           <h1>Lead</h1>
@@ -44,12 +47,12 @@ export default async function LeadDetailPage({
             Observações
             <textarea className="textarea" placeholder="Ex: pediu parcelamento e retirada hoje." />
           </label>
-          <div className="actions">
-            <button className="button primary">Marcar venda</button>
-            <button className="button secondary">
-              <MessageCircle size={18} /> Abrir WhatsApp
-            </button>
-          </div>
+          <LeadActionButtons
+            businessId={businessId}
+            leadId={lead.id}
+            whatsappNumber={business.whatsappNumber}
+            message={`Olá, vi seu interesse na busca: ${lead.originalQuery}`}
+          />
         </div>
       </section>
     </AppShell>

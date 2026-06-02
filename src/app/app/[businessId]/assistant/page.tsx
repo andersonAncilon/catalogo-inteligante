@@ -1,4 +1,3 @@
-import { Bot } from "lucide-react";
 import { AssistantCommandForm } from "@/components/forms/AssistantCommandForm";
 import { AppShell } from "@/components/ui/AppShell";
 
@@ -28,19 +27,14 @@ export default async function AssistantPage({ params }: { params: Promise<{ busi
           </div>
         </section>
         <aside className="card stack">
-          <div className="badge-row">
-            <span className="badge warning"><Bot size={14} /> Confirmação pendente</span>
-          </div>
-          <h2>Confirmar ação</h2>
-          <p>Entendi que você quer registrar uma venda.</p>
-          <p><strong>Produto:</strong> Samsung S20 FE</p>
-          <p><strong>Estoque atual:</strong> 2</p>
-          <p><strong>Novo estoque:</strong> 1</p>
-          <p><strong>Lead relacionado:</strong> cliente buscou celular até R$2000 com boa câmera.</p>
-          <div className="actions">
-            <button className="button primary">Confirmar venda</button>
-            <button className="button secondary">Cancelar</button>
-          </div>
+          <h2>Confirmação</h2>
+          <p>
+            Quando o assistente identificar uma venda ou atualização de estoque,
+            a confirmação aparece logo abaixo do comando antes de alterar dados.
+          </p>
+          <p className="muted">
+            A confirmação registra evento de inventário e atualiza métricas do dashboard.
+          </p>
         </aside>
       </div>
     </AppShell>

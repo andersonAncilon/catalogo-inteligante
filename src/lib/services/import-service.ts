@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { extractCatalogItems } from "@/lib/ai/catalog-import";
 import { badRequest, notFound } from "@/lib/backend/errors";
 import {
   createImportBatch,
@@ -17,7 +18,8 @@ export async function startImport(businessId: string, payload: unknown) {
   if (!business) throw notFound("Negócio não encontrado");
   const parsed = importSchema.safeParse(payload);
   if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos");
-  return createImportBatch({ businessId, ...parsed.data });
+  const detectedItems = parsed.data.rawContent ? await extractCatalogItems(parsed.data.rawContent) : null;
+  return createImportBatch({ businessId, ...parsed.data, detectedItems: detectedItems ?? undefined });
 }
 
 export async function getReviewImport(businessId: string) {

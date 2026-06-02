@@ -16,3 +16,11 @@ export function notFound(message = "Recurso não encontrado") {
 export function badRequest(message = "Requisição inválida") {
   return new ApiError(400, "bad_request", message);
 }
+
+export function unauthorized(message = "Autenticação necessária") {
+  return new ApiError(401, "unauthorized", message);
+}
+
+export function forbidden(message = "Você não tem permissão para executar esta ação") {
+  return new ApiError(403, "forbidden", message);
+}

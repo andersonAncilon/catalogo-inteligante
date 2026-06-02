@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BusinessCreateForm } from "@/components/forms/BusinessCreateForm";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { apiGet } from "@/lib/api/server";
 import type { Business } from "@/types/domain";
 
@@ -15,6 +16,7 @@ export default async function BusinessesPage() {
           <h1>Seus negócios</h1>
           <p>Escolha uma loja para acompanhar catálogo, leads e insights.</p>
         </div>
+        <ThemeToggle />
       </div>
       <div className="business-grid">
         {businesses.map((business) => (

@@ -11,21 +11,25 @@ export function BusinessCreateForm() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    const response = await fetch("/api/app/businesses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        slug: slug || slugify(name),
-        description: "",
-        whatsappNumber: "",
-        instagramHandle: "",
-      }),
-    });
-    const payload = await response.json();
-    setLoading(false);
-    if (response.ok) {
-      window.location.href = `/app/${payload.data.id}/settings`;
+    try {
+      const response = await fetch("/api/app/businesses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          slug: slug || slugify(name),
+          description: "",
+          whatsappNumber: "",
+          instagramHandle: "",
+        }),
+      });
+      const payload = await response.json();
+      if (response.ok) {
+        window.location.href = `/app/${payload.data.id}/settings?onboarding=1`;
+        return;
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -45,8 +49,9 @@ export function BusinessCreateForm() {
           placeholder={slugify(name) || "minha-loja"}
         />
       </label>
-      <button className="button primary" disabled={loading || !name}>
-        <Plus size={18} /> {loading ? "Criando..." : "Criar negócio"}
+      <button className="button primary" disabled={loading || !name} aria-busy={loading}>
+        {loading ? <span className="button-spinner" aria-hidden="true" /> : <Plus size={18} />}
+        {loading ? "Criando..." : "Criar negócio"}
       </button>
     </form>
   );

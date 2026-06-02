@@ -23,10 +23,13 @@ export type Product = {
   slug: string;
   description: string;
   price: number;
+  compareAtPrice: number | null;
   currency: "BRL";
   stockQuantity: number;
   condition: ProductCondition;
   status: ProductStatus;
+  isFeatured: boolean;
+  promotionLabel: string;
   brand: string;
   category: string;
   attributes: Record<string, string | number | boolean | null>;
@@ -42,6 +45,8 @@ export type InterpretedQuery = {
   preferredBrands: string[];
   excludedBrands: string[];
   useCase: string | null;
+  requiredAttributes: Record<string, string | number | boolean>;
+  searchTerms: string[];
 };
 
 export type SearchRecommendation = {

@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Search } from "lucide-react";
 
 export function SearchHero({ storeSlug = "loja-do-joao" }: { storeSlug?: string }) {
+  const [query, setQuery] = useState("quero um celular até R$2000 com boa câmera");
+  const searchHref = `/${storeSlug}/search?q=${encodeURIComponent(query)}`;
+
   return (
     <section className="hero">
       <div className="container hero-grid">
@@ -17,24 +23,25 @@ export function SearchHero({ storeSlug = "loja-do-joao" }: { storeSlug?: string 
           <div className="search-box">
             <input
               className="input"
-              defaultValue="quero um celular até R$2000 com boa câmera"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
               aria-label="Busca inteligente"
             />
-            <Link className="button primary" href={`/${storeSlug}/search`}>
+            <Link className="button primary" href={searchHref}>
               <Search size={18} /> Buscar
             </Link>
           </div>
           <div className="quick-tags">
-            <Link className="tag" href={`/${storeSlug}/search`}>
+            <Link className="tag" href={`/${storeSlug}/search?q=${encodeURIComponent("celular bom e barato")}`}>
               Bom e barato
             </Link>
-            <Link className="tag" href={`/${storeSlug}/search`}>
+            <Link className="tag" href={`/${storeSlug}/search?q=${encodeURIComponent("celular com boa câmera")}`}>
               Boa câmera
             </Link>
-            <Link className="tag" href={`/${storeSlug}/search`}>
+            <Link className="tag" href={`/${storeSlug}/search?q=${encodeURIComponent("celular com bateria forte")}`}>
               Bateria forte
             </Link>
-            <Link className="tag" href={`/${storeSlug}/search`}>
+            <Link className="tag" href={`/${storeSlug}/search?q=${encodeURIComponent("iPhone para fotos")}`}>
               iPhone para fotos
             </Link>
           </div>

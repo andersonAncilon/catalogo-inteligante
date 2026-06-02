@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 import { store } from "@/lib/mock-data";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { LeadWhatsAppButton } from "./LeadWhatsAppButton";
 import type { Business } from "@/types/domain";
 
 export function PublicHeader({ business }: { business?: Business }) {
@@ -19,9 +20,15 @@ export function PublicHeader({ business }: { business?: Business }) {
           <span className="brand-mark">{activeStore.name.slice(0, 2).toUpperCase()}</span>
           <span>{activeStore.name}</span>
         </Link>
-        <a className="button primary" href={`https://wa.me/${activeStore.whatsapp}`}>
-          <MessageCircle size={18} /> WhatsApp
-        </a>
+        <div className="actions">
+          <LeadWhatsAppButton
+            storeSlug={activeStore.slug}
+            whatsappNumber={activeStore.whatsapp}
+            label="WhatsApp"
+            originalQuery={`Olá, vim pela vitrine da ${activeStore.name}.`}
+          />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

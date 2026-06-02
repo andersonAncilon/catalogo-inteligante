@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, Star, Tag } from "lucide-react";
+import { LeadWhatsAppButton } from "@/components/public-store/LeadWhatsAppButton";
 import { PublicHeader } from "@/components/public-store/PublicHeader";
 import { ProductCard } from "@/components/public-store/ProductCard";
 import { getPublicProduct } from "@/lib/services/store-service";
@@ -9,6 +10,7 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
   const { storeSlug, productSlug } = await params;
   const { business, product, similarProducts } = await getPublicProduct(storeSlug, productSlug);
   const attributes = Object.entries(product.attributes).map(([key, value]) => `${key}: ${value}`);
+  const hasDiscount = Boolean(product.compareAtPrice && product.compareAtPrice > product.price);
 
   return (
     <div className="page">
@@ -27,9 +29,22 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
                 {product.stockQuantity > 0 ? "Em estoque" : "Sem estoque"}
               </span>
               <span className="badge warning">{product.condition === "new" ? "Novo" : "Usado"}</span>
+              {product.isFeatured ? (
+                <span className="badge green">
+                  <Star size={13} aria-hidden="true" /> Destaque
+                </span>
+              ) : null}
+              {product.promotionLabel ? (
+                <span className="badge warning">
+                  <Tag size={13} aria-hidden="true" /> {product.promotionLabel}
+                </span>
+              ) : null}
             </div>
             <h1>{product.title}</h1>
-            <p className="price">{formatCurrency(product.price)}</p>
+            <div className="price-stack">
+              {hasDiscount ? <span className="old-price">{formatCurrency(product.compareAtPrice ?? product.price)}</span> : null}
+              <p className="price">{formatCurrency(product.price)}</p>
+            </div>
             <p className="muted">{product.description}</p>
             <h3>Especificações</h3>
             <div className="quick-tags">
@@ -39,9 +54,14 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
                 </span>
               ))}
             </div>
-            <a className="button primary" href={`https://wa.me/${business.whatsappNumber}`}>
-              <MessageCircle size={18} /> Falar com vendedor no WhatsApp
-            </a>
+            <LeadWhatsAppButton
+              storeSlug={storeSlug}
+              whatsappNumber={business.whatsappNumber}
+              label="Falar com vendedor no WhatsApp"
+              productId={product.id}
+              leadSource="product_page"
+              originalQuery={`Olá, tenho interesse no produto ${product.title}.`}
+            />
           </section>
         </div>
         <section className="section">

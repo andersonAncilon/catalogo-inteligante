@@ -11,6 +11,7 @@ type DashboardResponse = {
   business: { name: string; slug: string };
   metrics: DashboardMetrics;
   topProducts: Product[];
+  weakSearches: string[];
   insights: Insight[];
 };
 
@@ -63,7 +64,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ busi
           </div>
           <div className="card">
             <h2>Buscas sem resultado</h2>
-            <p className="muted">“celular 5G até R$1000”, “iPhone barato parcelado”, “Samsung com 256GB até R$1300”.</p>
+            {dashboard.weakSearches.length ? (
+              <div className="quick-tags">
+                {dashboard.weakSearches.map((query) => (
+                  <span className="tag" key={query}>
+                    {query}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="muted">Ainda não há buscas com baixo encaixe registradas.</p>
+            )}
           </div>
         </section>
         <aside className="stack">

@@ -14,14 +14,14 @@ const updateBusinessSchema = businessSchema.partial().extend({
   status: z.enum(["active", "inactive", "draft"]).optional(),
 });
 
-export async function getBusinesses() {
-  return listBusinesses();
+export async function getBusinesses(userId: string) {
+  return listBusinesses(userId);
 }
 
-export async function registerBusiness(payload: unknown) {
+export async function registerBusiness(userId: string, payload: unknown) {
   const parsed = businessSchema.safeParse(payload);
   if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos");
-  return createBusiness(parsed.data);
+  return createBusiness({ ownerUserId: userId, ...parsed.data });
 }
 
 export async function getBusinessSettings(businessId: string) {

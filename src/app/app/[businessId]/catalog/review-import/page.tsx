@@ -13,6 +13,7 @@ type ReviewImportResponse = {
       detectedTitle: string | null;
       detectedPrice: number | null;
       detectedStockQuantity: number | null;
+      detectedAttributes: Record<string, string | number | boolean | null> | null;
       confidenceScore: number | null;
       status: string;
     }>;
@@ -38,6 +39,7 @@ export default async function ReviewImportPage({ params }: { params: Promise<{ b
           <thead>
             <tr>
               <th>Produto</th>
+              <th>Marca</th>
               <th>Preço</th>
               <th>Estoque</th>
               <th>Confiança</th>
@@ -48,6 +50,7 @@ export default async function ReviewImportPage({ params }: { params: Promise<{ b
             {items.map((item, index) => (
               <tr key={item.id}>
                 <td><input className="input" defaultValue={item.detectedTitle ?? ""} /></td>
+                <td><input className="input" defaultValue={getDetectedBrand(item.detectedAttributes)} /></td>
                 <td><input className="input" defaultValue={item.detectedPrice ? formatCurrency(item.detectedPrice) : ""} /></td>
                 <td><input className="input" defaultValue={item.detectedStockQuantity ?? "?"} /></td>
                 <td><span className={index < 2 ? "badge green" : "badge warning"}>{index < 2 ? "Alta" : "Média"}</span></td>
@@ -56,7 +59,7 @@ export default async function ReviewImportPage({ params }: { params: Promise<{ b
             ))}
             {items.length === 0 ? (
               <tr>
-                <td colSpan={5}>Nenhuma importação pendente. Volte e cole uma lista de produtos.</td>
+                <td colSpan={6}>Nenhuma importação pendente. Volte e cole uma lista de produtos.</td>
               </tr>
             ) : null}
           </tbody>
@@ -64,4 +67,9 @@ export default async function ReviewImportPage({ params }: { params: Promise<{ b
       </section>
     </AppShell>
   );
+}
+
+function getDetectedBrand(attributes: Record<string, string | number | boolean | null> | null) {
+  const brand = attributes?.brand;
+  return typeof brand === "string" ? brand : "";
 }

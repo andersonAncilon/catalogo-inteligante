@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { badRequest, notFound } from "@/lib/backend/errors";
 import { createLead, findBusinessBySlug, findProductById, listBusinessLeads } from "@/lib/repositories/catalog-repository";
-import { interpretSearchQuery } from "@/lib/search/intent";
+import { interpretSearchQueryWithAI } from "@/lib/search/intent";
 
 export const createLeadSchema = z.object({
   productId: z.string().optional(),
+  searchSessionId: z.string().optional(),
   originalQuery: z.string().min(1),
   leadSource: z.enum(["store_search", "product_page", "whatsapp_click"]).default("store_search"),
   whatsappClicked: z.boolean().default(false),
@@ -26,9 +27,10 @@ export async function registerLead(storeSlug: string, payload: unknown) {
 
   return createLead({
     businessId: business.id,
+    searchSessionId: parsed.data.searchSessionId,
     productId: parsed.data.productId,
     originalQuery: parsed.data.originalQuery,
-    interpretedQuery: interpretSearchQuery(parsed.data.originalQuery),
+    interpretedQuery: await interpretSearchQueryWithAI(parsed.data.originalQuery),
     leadSource: parsed.data.leadSource,
     status: "new",
     whatsappClicked: parsed.data.whatsappClicked,
